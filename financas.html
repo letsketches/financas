@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanças — Breno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --text: #1a1a18;
+    --text-muted: #6b6b65;
+    --text-faint: #aaa9a1;
+    --green: #1a9e6f;
+    --green-light: rgba(26,158,111,0.1);
+    --red: #d84f2c;
+    --red-light: rgba(216,79,44,0.1);
+    --accent: #1a1a18;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412;
+      --surface: #1e1e1b;
+      --surface2: #262622;
+      --border: rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.12);
+      --text: #f0efe8;
+      --text-muted: #888880;
+      --text-faint: #4a4a45;
+      --green: #22c98b;
+      --green-light: rgba(34,201,139,0.1);
+      --red: #f0674a;
+      --red-light: rgba(240,103,74,0.1);
+      --accent: #f0efe8;
+    }
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+
+  .login-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+
+  .login-logo span {
+    display: block;
+    font-size: 28px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .login-card h2 {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .login-card input[type=password] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: 'DM Mono', monospace;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    margin-bottom: 12px;
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+
+  .login-card input[type=password]:focus {
+    border-color: var(--accent);
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .login-btn:hover { opacity: 0.85; }
+
+  .login-error {
+    color: var(--red);
+    font-size: 12px;
+    margin-top: 8px;
+    min-height: 18px;
+  }
+
+  /* ── APP ── */
+  #app { display: none; min-height: 100vh; }
+
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .app-logo {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .app-logo span {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .logout-btn {
+    font-size: 12px;
+    color: var(--text-faint);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    padding: 4px 8px;
+  }
+  .logout-btn:hover { color: var(--text-muted); }
+
+  .app-nav {
+    display: flex;
+    gap: 2px;
+    padding: 0.75rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.1s, color 0.1s;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--surface2); color: var(--text); font-weight: 600; }
+
+  .app-content { padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── METRICS ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+
+  /* ── MONTH HEADER ── */
+  .month-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .month-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .arrow-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 16px;
+    transition: background 0.1s;
+  }
+  .arrow-btn:hover { background: var(--surface2); }
+
+  .month-title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    min-width: 160px;
+  }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .add-btn:hover { opacity: 0.85; }
+
+  /* ── TABLE ── */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.08s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.today-row { background: var(--green-light) !important; }
+
+  tbody td { padding: 9px 14px; color: var(--text); vertical-align: middle; }
+
+  .day-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .desc-text { color: var(--text); }
+  .cat-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--text-muted);
+    margin-right: 6px;
+  }
+
+  .val-in { font-family: 'DM Mono', monospace; color: var(--green); font-weight: 500; }
+  .val-out { font-family: 'DM Mono', monospace; color: var(--red); }
+  .val-saldo { font-family: 'DM Mono', monospace; font-weight: 500; }
+  .val-empty { color: var(--text-faint); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .fixed-tag { font-size: 10px; color: var(--text-faint); }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: color 0.1s, background 0.1s;
+  }
+  .del-btn:hover { color: var(--red); background: var(--red-light); }
+
+  /* ── CHART ── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 5px;
+  }
+
+  /* ── YEARLY GRID ── */
+  .yearly-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .month-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+
+  .month-card-name {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+
+  .month-card-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 2px 0;
+  }
+
+  .month-card-row .lbl { color: var(--text-muted); }
+  .month-card-row .pos { color: var(--green); font-family: 'DM Mono', monospace; font-weight: 500; }
+  .month-card-row .neg { color: var(--red); font-family: 'DM Mono', monospace; font-weight: 500; }
+  .month-card-row .neutral { font-family: 'DM Mono', monospace; }
+
+  /* ── ECONOMIA ── */
+  .eco-section { margin-bottom: 1.5rem; }
+  .eco-section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin-bottom: 10px; }
+
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .progress-main { font-size: 26px; font-weight: 700; letter-spacing: -0.04em; font-family: 'DM Mono', monospace; color: var(--text); }
+  .progress-pct { font-size: 13px; font-weight: 500; color: var(--green); font-family: 'DM Mono', monospace; }
+
+  .progress-bar-bg {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .progress-bar-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+
+  .progress-bottom { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 380px;
+    animation: slideUp 0.2s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; }
+
+  .form-row { margin-bottom: 14px; }
+  .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); display: block; margin-bottom: 5px; }
+
+  .form-row select,
+  .form-row input[type=text],
+  .form-row input[type=number] {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-row select:focus,
+  .form-row input:focus { border-color: var(--accent); }
+
+  .tipo-toggle { display: flex; gap: 6px; }
+  .tipo-opt {
+    flex: 1;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.12s;
+    text-align: center;
+  }
+  .tipo-opt.sel-entrada { background: var(--green-light); color: var(--green); border-color: var(--green); }
+  .tipo-opt.sel-saida { background: var(--red-light); color: var(--red); border-color: var(--red); }
+  .tipo-opt.sel-diario { background: var(--surface2); color: var(--text); border-color: var(--border-strong); }
+
+  .modal-footer { display: flex; gap: 8px; margin-top: 1.5rem; }
+  .btn-save {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .btn-save:hover { opacity: 0.85; }
+  .btn-cancel-m {
+    flex: 0 0 auto;
+    padding: 10px 16px;
+    font-size: 14px;
+    background: none;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-cancel-m:hover { background: var(--surface2); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .app-content { padding: 1rem; }
+    .month-title { font-size: 15px; }
+    thead th:nth-child(2), tbody td:nth-child(2) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo"><span>Finanças</span>controle pessoal</div>
+    <h2>Digite sua senha para continuar</h2>
+    <input type="password" id="pwd-input" placeholder="••••••••" autofocus onkeydown="if(event.key==='Enter')tryLogin()" />
+    <button class="login-btn" onclick="tryLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="app-header">
+    <div class="app-logo">Finanças <span>2026</span></div>
+    <button class="logout-btn" onclick="logout()">Sair</button>
+  </header>
+
+  <nav class="app-nav">
+    <button class="nav-btn active" onclick="switchView('diario', this)">Diário</button>
+    <button class="nav-btn" onclick="switchView('mensal', this)">Mensal</button>
+    <button class="nav-btn" onclick="switchView('economia', this)">Economia</button>
+  </nav>
+
+  <main class="app-content">
+
+    <!-- DIÁRIO -->
+    <div class="view active" id="view-diario">
+      <div class="month-header">
+        <div class="month-nav">
+          <button class="arrow-btn" onclick="changeMonth(-1)">&#8592;</button>
+          <div class="month-title" id="month-title"></div>
+          <button class="arrow-btn" onclick="changeMonth(1)">&#8594;</button>
+        </div>
+        <button class="add-btn" onclick="openModal()">+ Lançamento</button>
+      </div>
+      <div class="metrics-grid" id="diario-metrics"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:44px">Dia</th>
+              <th>Descrição</th>
+              <th style="width:110px;text-align:right">Entrada</th>
+              <th style="width:110px;text-align:right">Saída</th>
+              <th style="width:110px;text-align:right">Saldo</th>
+              <th style="width:36px"></th>
+            </tr>
+          </thead>
+          <tbody id="day-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MENSAL -->
+    <div class="view" id="view-mensal">
+      <div class="chart-card">
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:#1a9e6f"></span>Entradas</span>
+          <span><span class="legend-dot" style="background:#d84f2c"></span>Saídas</span>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="monthly-chart"></canvas>
+        </div>
+      </div>
+      <div class="yearly-grid" id="yearly-grid"></div>
+    </div>
+
+    <!-- ECONOMIA -->
+    <div class="view" id="view-economia">
+      <div class="metrics-grid" id="eco-metrics"></div>
+      <div class="progress-wrap">
+        <div class="progress-top">
+          <div>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:4px">Meta de economia</div>
+            <div class="progress-main" id="eco-acumulado"></div>
+          </div>
+          <div class="progress-pct" id="eco-pct"></div>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="eco-bar"></div></div>
+        <div class="progress-bottom">
+          <span id="eco-faltam"></span>
+          <span id="eco-meta"></span>
+        </div>
+      </div>
+      <div class="eco-section">
+        <div class="eco-section-title">Economia por mês</div>
+        <div class="chart-card" style="margin-bottom:0">
+          <div style="position:relative;height:200px">
+            <canvas id="eco-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Novo lançamento</div>
+    <div class="form-row">
+      <label class="form-label">Tipo</label>
+      <div class="tipo-toggle">
+        <button class="tipo-opt sel-entrada" id="opt-entrada" onclick="selectTipo('entrada')">Entrada</button>
+        <button class="tipo-opt" id="opt-saida" onclick="selectTipo('saida')">Saída</button>
+        <button class="tipo-opt" id="opt-diario" onclick="selectTipo('diario')">Fixo diário</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Valor (R$)</label>
+      <input type="number" id="m-valor" placeholder="0,00" step="0.01" min="0" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Descrição</label>
+      <input type="text" id="m-desc" placeholder="Ex: salário, mercado, gasolina..." />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Dia do mês</label>
+      <input type="number" id="m-dia" min="1" max="31" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Categoria</label>
+      <select id="m-cat">
+        <option value="salário">Salário</option>
+        <option value="freelance">Freelance</option>
+        <option value="rendimento">Rendimento</option>
+        <option value="alimentação">Alimentação</option>
+        <option value="transporte">Transporte</option>
+        <option value="saúde">Saúde</option>
+        <option value="lazer">Lazer</option>
+        <option value="moradia">Moradia</option>
+        <option value="outros" selected>Outros</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel-m" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveEntry()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUTH ──
+const PASS_HASH = '8b1dc92c3b0e4f9a7d2c5e8f1a4b7c0d'; // leticia04 hashed marker
+const REAL_PASS = 'leticia04';
+
+function tryLogin() {
+  const v = document.getElementById('pwd-input').value;
+  if(v === REAL_PASS) {
+    sessionStorage.setItem('auth', '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderDiario();
+  } else {
+    document.getElementById('login-error').textContent = 'Senha incorreta. Tente novamente.';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('auth');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('pwd-input').value = '';
+}
+
+if(sessionStorage.getItem('auth') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+// ── DATA ──
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const FIXED_DIARIO = 71.5;
+const META = 27000;
+const TENHO = 9554.04;
+const ECO_MONTHS = [0,1,2,3,4,5,6,7,8];
+const ECO_VALUES = [2000,2360,2350,1000,2500,2500,2500,2500,2500];
+
+const SEED = {
+  0: [{d:2,t:'entrada',v:0.13,desc:'Rendimento',cat:'rendimento'},{d:3,t:'entrada',v:1500,desc:'Entrada',cat:'outros'},{d:4,t:'entrada',v:121.26,desc:'Entrada',cat:'outros'},{d:5,t:'entrada',v:5029.95,desc:'Salário',cat:'salário'},{d:5,t:'saida',v:1683.24,desc:'Saída',cat:'outros'},{d:6,t:'entrada',v:66.71,desc:'Entrada',cat:'outros'},{d:10,t:'entrada',v:225.6,desc:'Entrada',cat:'outros'},{d:11,t:'entrada',v:170,desc:'Entrada',cat:'outros'},{d:14,t:'entrada',v:185.19,desc:'Entrada',cat:'outros'},{d:15,t:'entrada',v:1035,desc:'Salário parcial',cat:'salário'},{d:16,t:'entrada',v:24.89,desc:'Entrada',cat:'outros'},{d:23,t:'entrada',v:204.05,desc:'Entrada',cat:'outros'},{d:26,t:'entrada',v:200,desc:'Entrada',cat:'outros'},{d:31,t:'entrada',v:65,desc:'Entrada',cat:'outros'}],
+  1: [{d:2,t:'entrada',v:0.14,desc:'Rendimento',cat:'rendimento'},{d:5,t:'entrada',v:5038.03,desc:'Salário',cat:'salário'},{d:5,t:'saida',v:2119.29,desc:'Saída',cat:'outros'},{d:10,t:'entrada',v:120,desc:'Entrada',cat:'outros'},{d:15,t:'entrada',v:1035,desc:'Salário parcial',cat:'salário'},{d:15,t:'saida',v:1000,desc:'Saída',cat:'outros'},{d:16,t:'entrada',v:83,desc:'Entrada',cat:'outros'},{d:17,t:'entrada',v:60,desc:'Entrada',cat:'outros'},{d:18,t:'entrada',v:50,desc:'Entrada',cat:'outros'},{d:22,t:'entrada',v:50,desc:'Entrada',cat:'outros'}],
+  2: [{d:1,t:'entrada',v:66,desc:'Entrada',cat:'outros'},{d:2,t:'entrada',v:0.14,desc:'Rendimento',cat:'rendimento'},{d:5,t:'entrada',v:5188.03,desc:'Salário',cat:'salário'},{d:5,t:'saida',v:1350,desc:'Saída',cat:'outros'},{d:8,t:'entrada',v:391,desc:'Entrada',cat:'outros'},{d:10,t:'entrada',v:436.23,desc:'Entrada',cat:'outros'},{d:15,t:'entrada',v:1035,desc:'Salário parcial',cat:'salário'},{d:15,t:'saida',v:1000,desc:'Saída',cat:'outros'},{d:16,t:'saida',v:200,desc:'Saída',cat:'outros'},{d:18,t:'entrada',v:477,desc:'Entrada',cat:'outros'},{d:28,t:'entrada',v:154,desc:'Entrada',cat:'outros'}],
+  3: [{d:1,t:'saida',v:369.9,desc:'Saída',cat:'outros'},{d:2,t:'entrada',v:0.14,desc:'Rendimento',cat:'rendimento'},{d:3,t:'entrada',v:567,desc:'Entrada',cat:'outros'},{d:5,t:'entrada',v:4738.03,desc:'Salário',cat:'salário'},{d:5,t:'saida',v:500,desc:'Saída',cat:'outros'},{d:6,t:'entrada',v:225.72,desc:'Entrada',cat:'outros'},{d:7,t:'entrada',v:70,desc:'Entrada',cat:'outros'},{d:9,t:'saida',v:250.91,desc:'Saída',cat:'outros'},{d:11,t:'saida',v:203,desc:'Saída',cat:'outros'},{d:12,t:'entrada',v:32,desc:'Entrada',cat:'outros'},{d:14,t:'entrada',v:100,desc:'Entrada',cat:'outros'},{d:14,t:'saida',v:50,desc:'Saída',cat:'outros'},{d:15,t:'entrada',v:1035,desc:'Salário parcial',cat:'salário'},{d:15,t:'saida',v:500,desc:'Saída',cat:'outros'},{d:16,t:'entrada',v:50,desc:'Entrada',cat:'outros'},{d:30,t:'entrada',v:350,desc:'Entrada',cat:'outros'},{d:31,t:'entrada',v:288.06,desc:'Entrada',cat:'outros'}],
+};
+
+let appData = {};
+try { appData = JSON.parse(localStorage.getItem('fin2026') || '{}'); } catch(e){}
+for(let m = 0; m < 12; m++) {
+  if(!appData[m]) appData[m] = { entries: (SEED[m] || []).map(e => ({...e})) };
+}
+
+function saveData() { try { localStorage.setItem('fin2026', JSON.stringify(appData)); } catch(e){} }
+
+function getDaysInMonth(m) { return new Date(2026, m+1, 0).getDate(); }
+
+function calcStats(m) {
+  const entries = appData[m]?.entries || [];
+  let totalIn = 0, totalOut = 0;
+  entries.forEach(e => {
+    if(e.t === 'entrada') totalIn += e.v;
+    else if(e.t === 'saida') totalOut += e.v;
+  });
+  totalOut += FIXED_DIARIO * getDaysInMonth(m);
+  return { totalIn, totalOut, saldo: totalIn - totalOut };
+}
+
+function fmt(v, decimals=2) {
+  return 'R$\u202f' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
+
+// ── VIEWS ──
+let currentMonth = new Date().getMonth();
+let monthChart = null, ecoChart = null;
+let modalTipo = 'entrada';
+
+function switchView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+  if(name === 'mensal') renderMensal();
+  if(name === 'economia') renderEconomia();
+}
+
+// ── DIÁRIO ──
+function changeMonth(dir) {
+  currentMonth = Math.max(0, Math.min(11, currentMonth + dir));
+  renderDiario();
+}
+
+function renderDiario() {
+  document.getElementById('month-title').textContent = MONTHS[currentMonth] + ' 2026';
+  const s = calcStats(currentMonth);
+  document.getElementById('diario-metrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Entradas</div><div class="metric-value green">${fmt(s.totalIn,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Saídas</div><div class="metric-value red">${fmt(s.totalOut,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Resultado</div><div class="metric-value ${s.saldo>=0?'green':'red'}">${fmt(s.saldo,0)}</div></div>
+  `;
+
+  const today = new Date();
+  const isThisMonth = today.getMonth() === currentMonth && today.getFullYear() === 2026;
+  const todayDay = isThisMonth ? today.getDate() : -1;
+
+  const byDay = {};
+  (appData[currentMonth]?.entries || []).forEach((e, i) => {
+    if(!byDay[e.d]) byDay[e.d] = [];
+    byDay[e.d].push({...e, _i: i});
+  });
+
+  let runSaldo = 0;
+  let html = '';
+  const days = getDaysInMonth(currentMonth);
+
+  for(let d = 1; d <= days; d++) {
+    const dayEntries = byDay[d] || [];
+    let dIn = 0, dOut = FIXED_DIARIO;
+    dayEntries.forEach(e => {
+      if(e.t === 'entrada') dIn += e.v;
+      else if(e.t === 'saida') dOut += e.v;
+    });
+    runSaldo += dIn - dOut;
+
+    const trClass = d === todayDay ? ' class="today-row"' : '';
+
+    if(dayEntries.length > 0) {
+      dayEntries.forEach((e, i) => {
+        const isFirst = i === 0;
+        const inVal = e.t === 'entrada' ? `<span class="val-in">+${fmt(e.v)}</span>` : `<span class="val-empty">—</span>`;
+        const outVal = e.t === 'saida' ? `<span class="val-out">−${fmt(e.v)}</span>` : `<span class="val-empty">—</span>`;
+        html += `<tr${trClass}>
+          <td class="day-num">${isFirst ? String(d).padStart(2,'0') : ''}</td>
+          <td><span class="cat-tag">${e.cat||'outros'}</span><span class="desc-text">${e.desc||''}</span></td>
+          <td style="text-align:right">${inVal}</td>
+          <td style="text-align:right">${outVal}</td>
+          <td style="text-align:right">${isFirst ? `<span class="val-saldo ${runSaldo<0?'red':''}">${fmt(runSaldo)}</span>` : ''}</td>
+          <td><button class="del-btn" onclick="removeEntry(${currentMonth},${e._i})">×</button></td>
+        </tr>`;
+      });
+    } else {
+      html += `<tr${trClass}>
+        <td class="day-num">${String(d).padStart(2,'0')}</td>
+        <td><span class="fixed-tag">Fixo diário ${fmt(FIXED_DIARIO)}</span></td>
+        <td style="text-align:right"><span class="val-empty">—</span></td>
+        <td style="text-align:right"><span class="val-out" style="font-size:11px">−${fmt(FIXED_DIARIO)}</span></td>
+        <td style="text-align:right"><span class="val-saldo ${runSaldo<0?'red':''}">${fmt(runSaldo)}</span></td>
+        <td></td>
+      </tr>`;
+    }
+  }
+  document.getElementById('day-tbody').innerHTML = html;
+}
+
+function removeEntry(m, idx) {
+  appData[m].entries.splice(idx, 1);
+  saveData();
+  renderDiario();
+}
+
+// ── MENSAL ──
+function renderMensal() {
+  const ins = [], outs = [];
+  for(let m = 0; m < 12; m++) {
+    const s = calcStats(m);
+    ins.push(Math.round(s.totalIn));
+    outs.push(Math.round(s.totalOut));
+  }
+
+  if(monthChart) monthChart.destroy();
+  monthChart = new Chart(document.getElementById('monthly-chart'), {
+    type: 'bar',
+    data: {
+      labels: MONTHS_SHORT,
+      datasets: [
+        {label:'Entradas', data:ins, backgroundColor:'rgba(26,158,111,0.65)', borderRadius:4, borderSkipped:false},
+        {label:'Saídas', data:outs, backgroundColor:'rgba(216,79,44,0.55)', borderRadius:4, borderSkipped:false},
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11}, color:'#888880'}},
+        y:{grid:{color:'rgba(128,128,128,0.08)'}, ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR'), font:{size:10}, color:'#888880'}}
+      }
+    }
+  });
+
+  let grid = '';
+  for(let m = 0; m < 12; m++) {
+    const s = calcStats(m);
+    grid += `<div class="month-card">
+      <div class="month-card-name">${MONTHS[m]}</div>
+      <div class="month-card-row"><span class="lbl">Entradas</span><span class="pos">${fmt(s.totalIn,0)}</span></div>
+      <div class="month-card-row"><span class="lbl">Saídas</span><span class="neg">${fmt(s.totalOut,0)}</span></div>
+      <div class="month-card-row"><span class="lbl">Resultado</span><span class="${s.saldo>=0?'pos':'neg'}">${fmt(s.saldo,0)}</span></div>
+    </div>`;
+  }
+  document.getElementById('yearly-grid').innerHTML = grid;
+}
+
+// ── ECONOMIA ──
+function renderEconomia() {
+  const pct = Math.min(100, Math.round((TENHO / META) * 100));
+  const totalEco = ECO_VALUES.reduce((a,b)=>a+b,0);
+
+  document.getElementById('eco-metrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Meta</div><div class="metric-value">${fmt(META,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Acumulado</div><div class="metric-value green">${fmt(TENHO,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Faltam</div><div class="metric-value red">${fmt(META-TENHO,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">% da meta</div><div class="metric-value green">${pct}%</div></div>
+  `;
+
+  document.getElementById('eco-acumulado').textContent = fmt(TENHO,0);
+  document.getElementById('eco-pct').textContent = pct + '%';
+  document.getElementById('eco-bar').style.width = pct + '%';
+  document.getElementById('eco-faltam').textContent = 'Faltam ' + fmt(META - TENHO, 0);
+  document.getElementById('eco-meta').textContent = 'Meta: ' + fmt(META, 0);
+
+  if(ecoChart) ecoChart.destroy();
+  ecoChart = new Chart(document.getElementById('eco-chart'), {
+    type:'line',
+    data:{
+      labels: ECO_MONTHS.map(i => MONTHS_SHORT[i]),
+      datasets:[{
+        label:'Economia',
+        data: ECO_VALUES,
+        borderColor:'#1a9e6f',
+        backgroundColor:'rgba(26,158,111,0.08)',
+        borderWidth:2,
+        pointRadius:4,
+        pointBackgroundColor:'#1a9e6f',
+        fill:true,
+        tension:0.35
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11}, color:'#888880'}},
+        y:{grid:{color:'rgba(128,128,128,0.08)'}, ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR'), font:{size:10}, color:'#888880'}}
+      }
+    }
+  });
+}
+
+// ── MODAL ──
+function openModal() {
+  document.getElementById('m-dia').value = new Date().getDate();
+  document.getElementById('m-valor').value = '';
+  document.getElementById('m-desc').value = '';
+  selectTipo('entrada');
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('m-valor').focus(), 100);
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function selectTipo(t) {
+  modalTipo = t;
+  ['entrada','saida','diario'].forEach(x => {
+    const btn = document.getElementById('opt-' + x);
+    btn.className = 'tipo-opt' + (x === t ? ' sel-' + x : '');
+  });
+}
+
+function saveEntry() {
+  const v = parseFloat(document.getElementById('m-valor').value);
+  const desc = document.getElementById('m-desc').value.trim() || modalTipo;
+  const d = parseInt(document.getElementById('m-dia').value);
+  const cat = document.getElementById('m-cat').value;
+  if(!v || isNaN(v) || !d || d < 1 || d > 31) {
+    document.getElementById('m-valor').focus();
+    return;
+  }
+  if(!appData[currentMonth]) appData[currentMonth] = {entries:[]};
+  appData[currentMonth].entries.push({d, t: modalTipo, v, desc, cat});
+  appData[currentMonth].entries.sort((a,b) => a.d - b.d);
+  saveData();
+  closeModal();
+  renderDiario();
+}
+
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if(e.target === e.currentTarget) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeModal();
+});
+
+// Auto-login check
+if(sessionStorage.getItem('auth') === '1') renderDiario();
+</script>
+</body>
+</html>
