@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanças — Breno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f6f3; --surface: #fff; --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.08); --border-strong: rgba(0,0,0,0.14);
+    --text: #1a1a18; --text-muted: #6b6b65; --text-faint: #aaa9a1;
+    --green: #1a9e6f; --green-light: rgba(26,158,111,0.1);
+    --red: #d84f2c; --red-light: rgba(216,79,44,0.1);
+    --amber: #b87a0f; --amber-light: rgba(184,122,15,0.1);
+    --blue: #2563a8; --blue-light: rgba(37,99,168,0.1);
+    --radius: 10px; --radius-lg: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412; --surface: #1e1e1b; --surface2: #262622;
+      --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.12);
+      --text: #f0efe8; --text-muted: #888880; --text-faint: #4a4a45;
+      --green: #22c98b; --green-light: rgba(34,201,139,0.1);
+      --red: #f0674a; --red-light: rgba(240,103,74,0.1);
+      --amber: #e0a030; --amber-light: rgba(224,160,48,0.1);
+      --blue: #5b9bd5; --blue-light: rgba(91,155,213,0.1);
+    }
+  }
+  html,body{height:100%;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:100%;max-width:360px;text-align:center;}
+  .login-logo{font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2rem;}
+  .login-logo span{display:block;font-size:28px;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--text);letter-spacing:-.02em;margin-bottom:4px;}
+  .login-card h2{font-size:15px;font-weight:500;color:var(--text-muted);margin-bottom:1.5rem;}
+  .login-card input[type=password]{width:100%;padding:10px 14px;font-size:15px;font-family:'DM Mono',monospace;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;margin-bottom:12px;letter-spacing:.1em;text-align:center;}
+  .login-card input[type=password]:focus{border-color:var(--text);}
+  .login-btn{width:100%;padding:10px;font-size:14px;font-weight:600;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .login-btn:hover{opacity:.85;}
+  .login-error{color:var(--red);font-size:12px;margin-top:8px;min-height:18px;}
+
+  #app{display:none;min-height:100vh;}
+  .app-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+  .app-logo{font-size:16px;font-weight:600;letter-spacing:-.02em;}
+  .app-logo span{font-family:'DM Mono',monospace;font-size:11px;font-weight:400;color:var(--text-muted);margin-left:8px;}
+  .logout-btn{font-size:12px;color:var(--text-faint);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 8px;}
+  .app-nav{display:flex;gap:2px;padding:.75rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);}
+  .nav-btn{padding:6px 14px;font-size:13px;font-weight:500;background:none;border:none;border-radius:8px;cursor:pointer;color:var(--text-muted);font-family:'DM Sans',sans-serif;transition:background .1s;}
+  .nav-btn:hover{background:var(--surface2);color:var(--text);}
+  .nav-btn.active{background:var(--surface2);color:var(--text);font-weight:600;}
+  .app-content{padding:1.5rem;max-width:980px;margin:0 auto;}
+  .view{display:none;}.view.active{display:block;}
+
+  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem;}
+  .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;}
+  .metric-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:5px;}
+  .metric-value{font-size:19px;font-weight:600;letter-spacing:-.03em;font-family:'DM Mono',monospace;}
+  .metric-value.green{color:var(--green);}
+  .metric-value.red{color:var(--red);}
+  .metric-value.amber{color:var(--amber);}
+  .metric-value.blue{color:var(--blue);}
+
+  .month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;}
+  .month-nav{display:flex;align-items:center;gap:10px;}
+  .arrow-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);font-size:16px;}
+  .arrow-btn:hover{background:var(--surface2);}
+  .month-title{font-size:18px;font-weight:600;letter-spacing:-.02em;min-width:160px;}
+  .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .add-btn{padding:8px 16px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .add-btn:hover{opacity:.85;}
+  .default-btn{padding:7px 12px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .default-btn:hover{background:var(--surface2);color:var(--text);}
+
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);border-bottom:1px solid var(--border);background:var(--surface2);}
+  tbody tr{border-bottom:1px solid var(--border);}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover td{background:var(--surface2);}
+  tbody tr.today-row>td{background:var(--green-light);}
+  tbody tr.over-row>td{background:var(--red-light);}
+  tbody tr.under-row>td{background:var(--amber-light);}
+  tbody tr.sub-row>td{background:transparent;}
+  tbody tr.sub-row:hover>td{background:var(--surface2);}
+  tbody td{padding:9px 14px;color:var(--text);vertical-align:middle;}
+  .day-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);font-weight:500;}
+  .tag{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;margin-right:6px;}
+  .tag-diario{background:var(--amber-light);color:var(--amber);}
+  .tag-invest{background:var(--blue-light);color:var(--blue);}
+  .tag-saida{background:var(--red-light);color:var(--red);}
+  .tag-entrada{background:var(--green-light);color:var(--green);}
+  .tag-cat{background:var(--surface2);color:var(--text-muted);}
+  .val-in{font-family:'DM Mono',monospace;color:var(--green);font-weight:500;}
+  .val-out{font-family:'DM Mono',monospace;color:var(--red);}
+  .val-invest{font-family:'DM Mono',monospace;color:var(--blue);}
+  .val-daily{font-family:'DM Mono',monospace;color:var(--amber);}
+  .val-saldo{font-family:'DM Mono',monospace;font-weight:600;font-size:13px;}
+  .val-empty{color:var(--text-faint);font-family:'DM Mono',monospace;font-size:11px;}
+  .diff-badge{font-size:10px;font-family:'DM Mono',monospace;margin-left:6px;}
+  .diff-over{color:var(--red);}.diff-under{color:var(--amber);}.diff-ok{color:var(--green);}
+  .notes-lines{margin-top:3px;}
+  .note-line{font-size:11px;color:var(--text-muted);display:block;line-height:1.4;}
+  .actions-cell{display:flex;gap:2px;align-items:center;}
+  .edit-btn{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:13px;padding:3px 7px;border-radius:4px;}
+  .edit-btn:hover{color:var(--amber);background:var(--amber-light);}
+  .del-btn{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;line-height:1;}
+  .del-btn:hover{color:var(--red);background:var(--red-light);}
+  .legend-row{margin-top:12px;display:flex;gap:14px;font-size:11px;color:var(--text-faint);flex-wrap:wrap;}
+  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;}
+
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem;}
+  .chart-legend{display:flex;gap:14px;margin-bottom:12px;font-size:12px;color:var(--text-muted);flex-wrap:wrap;}
+  .legend-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;}
+  .yearly-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;}
+  .month-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+  .month-card-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:8px;}
+  .month-card-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0;}
+  .month-card-row .lbl{color:var(--text-muted);}
+  .month-card-row .pos{color:var(--green);font-family:'DM Mono',monospace;font-weight:500;}
+  .month-card-row .neg{color:var(--red);font-family:'DM Mono',monospace;font-weight:500;}
+  .month-card-row .blu{color:var(--blue);font-family:'DM Mono',monospace;font-weight:500;}
+
+  .progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem;}
+  .progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .progress-main{font-size:26px;font-weight:700;letter-spacing:-.04em;font-family:'DM Mono',monospace;}
+  .progress-pct{font-size:13px;font-weight:500;color:var(--green);font-family:'DM Mono',monospace;}
+  .progress-bar-bg{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:8px;}
+  .progress-bar-fill{height:100%;background:var(--green);border-radius:4px;transition:width .6s;}
+  .progress-bottom{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);}
+  .eco-section-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px;}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;width:100%;max-width:420px;animation:slideUp .2s ease;max-height:90vh;overflow-y:auto;}
+  @keyframes slideUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal-title{font-size:16px;font-weight:600;margin-bottom:1.25rem;}
+  .form-row{margin-bottom:14px;}
+  .form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);display:block;margin-bottom:5px;}
+  .form-row select,.form-row input[type=text],.form-row input[type=number]{width:100%;padding:9px 12px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--border-strong);border-radius:var(--radius);outline:none;}
+  .form-row select:focus,.form-row input:focus{border-color:var(--text);}
+  .form-row textarea{width:100%;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--border-strong);border-radius:var(--radius);outline:none;resize:vertical;min-height:70px;line-height:1.5;}
+  .form-row textarea:focus{border-color:var(--text);}
+  .tipo-toggle{display:flex;gap:6px;flex-wrap:wrap;}
+  .tipo-opt{flex:1;min-width:70px;padding:8px 6px;font-size:12px;font-weight:500;border:1px solid var(--border-strong);border-radius:var(--radius);background:none;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;}
+  .tipo-opt.sel-entrada{background:var(--green-light);color:var(--green);border-color:var(--green);}
+  .tipo-opt.sel-saida{background:var(--red-light);color:var(--red);border-color:var(--red);}
+  .tipo-opt.sel-diario{background:var(--amber-light);color:var(--amber);border-color:var(--amber);}
+  .tipo-opt.sel-invest{background:var(--blue-light);color:var(--blue);border-color:var(--blue);}
+  .hint{font-size:11px;color:var(--text-faint);margin-top:5px;}
+  .modal-footer{display:flex;gap:8px;margin-top:1.5rem;}
+  .btn-save{flex:1;padding:10px;font-size:14px;font-weight:600;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .btn-save:hover{opacity:.85;}
+  .btn-cancel-m{padding:10px 16px;font-size:14px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .btn-cancel-m:hover{background:var(--surface2);}
+  .default-modal{max-width:340px;}
+  .default-modal .cur{font-family:'DM Mono',monospace;font-size:24px;font-weight:600;color:var(--amber);margin:.5rem 0 1.25rem;}
+
+  @media(max-width:600px){
+    .app-content{padding:1rem;}
+    .month-title{font-size:15px;}
+    thead th:nth-child(3),tbody td:nth-child(3),
+    thead th:nth-child(4),tbody td:nth-child(4){display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo"><span>Finanças</span>controle pessoal</div>
+    <h2>Digite sua senha para continuar</h2>
+    <input type="password" id="pwd-input" placeholder="••••••••" autofocus onkeydown="if(event.key==='Enter')tryLogin()">
+    <button class="login-btn" onclick="tryLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="app-header">
+    <div class="app-logo">Finanças <span>2026</span></div>
+    <button class="logout-btn" onclick="logout()">Sair</button>
+  </header>
+  <nav class="app-nav">
+    <button class="nav-btn active" onclick="switchView('diario',this)">Diário</button>
+    <button class="nav-btn" onclick="switchView('mensal',this)">Mensal</button>
+    <button class="nav-btn" onclick="switchView('economia',this)">Economia</button>
+  </nav>
+  <main class="app-content">
+
+    <div class="view active" id="view-diario">
+      <div class="month-header">
+        <div class="month-nav">
+          <button class="arrow-btn" onclick="changeMonth(-1)">&#8592;</button>
+          <div class="month-title" id="month-title"></div>
+          <button class="arrow-btn" onclick="changeMonth(1)">&#8594;</button>
+        </div>
+        <div class="header-actions">
+          <button class="default-btn" onclick="openDefaultModal()">⚙ Padrão: <span id="default-label" style="font-family:'DM Mono',monospace;margin-left:2px"></span></button>
+          <button class="add-btn" onclick="openModal()">+ Lançamento</button>
+        </div>
+      </div>
+      <div class="metrics-grid" id="diario-metrics"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:44px">Dia</th>
+            <th>Descrição / Notas</th>
+            <th style="width:105px;text-align:right">Entrada</th>
+            <th style="width:105px;text-align:right">Saída</th>
+            <th style="width:120px;text-align:right">Saldo</th>
+            <th style="width:64px"></th>
+          </tr></thead>
+          <tbody id="day-tbody"></tbody>
+        </table>
+      </div>
+      <div class="legend-row">
+        <span><span class="legend-swatch" style="background:var(--amber-light);border:1px solid var(--amber)"></span>Abaixo do padrão</span>
+        <span><span class="legend-swatch" style="background:var(--red-light);border:1px solid var(--red)"></span>Acima do padrão</span>
+        <span><span class="legend-swatch" style="background:var(--green-light);border:1px solid var(--green)"></span>Hoje</span>
+        <span><span class="legend-swatch" style="background:var(--blue-light);border:1px solid var(--blue)"></span>Investimento</span>
+      </div>
+    </div>
+
+    <div class="view" id="view-mensal">
+      <div class="chart-card">
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:#1a9e6f"></span>Entradas</span>
+          <span><span class="legend-dot" style="background:#d84f2c"></span>Saídas</span>
+          <span><span class="legend-dot" style="background:#2563a8"></span>Investimentos</span>
+        </div>
+        <div style="position:relative;height:240px"><canvas id="monthly-chart"></canvas></div>
+      </div>
+      <div class="yearly-grid" id="yearly-grid"></div>
+    </div>
+
+    <div class="view" id="view-economia">
+      <div class="metrics-grid" id="eco-metrics"></div>
+      <div class="progress-wrap">
+        <div class="progress-top">
+          <div>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:4px">Meta de economia</div>
+            <div class="progress-main" id="eco-acumulado"></div>
+          </div>
+          <div class="progress-pct" id="eco-pct"></div>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="eco-bar"></div></div>
+        <div class="progress-bottom"><span id="eco-faltam"></span><span id="eco-meta"></span></div>
+      </div>
+      <div class="eco-section-title">Economia por mês</div>
+      <div class="chart-card" style="margin-bottom:0">
+        <div style="position:relative;height:200px"><canvas id="eco-chart"></canvas></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL LANÇAMENTO -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title-text">Novo lançamento</div>
+    <div class="form-row">
+      <label class="form-label">Tipo</label>
+      <div class="tipo-toggle">
+        <button class="tipo-opt sel-entrada" id="opt-entrada" onclick="selectTipo('entrada')">Entrada</button>
+        <button class="tipo-opt" id="opt-saida" onclick="selectTipo('saida')">Saída</button>
+        <button class="tipo-opt" id="opt-diario" onclick="selectTipo('diario')">Diário</button>
+        <button class="tipo-opt" id="opt-invest" onclick="selectTipo('invest')">Investimento</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Valor (R$)</label>
+      <input type="number" id="m-valor" placeholder="0,00" step="0.01" min="0">
+      <div class="hint" id="m-hint"></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Descrição</label>
+      <input type="text" id="m-desc" placeholder="Ex: salário, mercado, aporte...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Notas (opcional)</label>
+      <textarea id="m-notes" placeholder="Ex: 32 - unha&#10;20 - farmácia&#10;249,95 - vestido"></textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Dia do mês</label>
+      <input type="number" id="m-dia" min="1" max="31">
+    </div>
+    <div class="form-row" id="m-cat-row">
+      <label class="form-label">Categoria</label>
+      <select id="m-cat">
+        <option value="salário">Salário</option>
+        <option value="freelance">Freelance</option>
+        <option value="rendimento">Rendimento</option>
+        <option value="alimentação">Alimentação</option>
+        <option value="transporte">Transporte</option>
+        <option value="saúde">Saúde</option>
+        <option value="lazer">Lazer</option>
+        <option value="moradia">Moradia</option>
+        <option value="investimento">Investimento</option>
+        <option value="outros" selected>Outros</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel-m" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveEntry()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PADRÃO -->
+<div class="modal-overlay" id="default-modal-overlay">
+  <div class="modal default-modal">
+    <div class="modal-title">Gasto diário padrão</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:.5rem">Usado em dias sem lançamento do tipo "Diário".</p>
+    <div class="cur" id="default-current-val"></div>
+    <div class="form-row">
+      <label class="form-label">Novo valor (R$)</label>
+      <input type="number" id="default-input" step="0.01" min="0" placeholder="71,50" onkeydown="if(event.key==='Enter')saveDefault()">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel-m" onclick="closeDefaultModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveDefault()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const REAL_PASS='leticia04';
+function tryLogin(){
+  if(document.getElementById('pwd-input').value===REAL_PASS){
+    sessionStorage.setItem('auth','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    renderDiario();
+  } else {
+    document.getElementById('login-error').textContent='Senha incorreta.';
+    document.getElementById('pwd-input').value='';
+    document.getElementById('pwd-input').focus();
+  }
+}
+function logout(){sessionStorage.removeItem('auth');document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('pwd-input').value='';}
+if(sessionStorage.getItem('auth')==='1'){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';}
+
+const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MONTHS_SHORT=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const META=27000,TENHO=9554.04;
+const ECO_MONTHS=[0,1,2,3,4,5,6,7,8];
+const ECO_VALUES=[2000,2360,2350,1000,2500,2500,2500,2500,2500];
+const SALDO_INICIAL=2193.07;
+
+// ── SEED COMPLETO (verificado contra a planilha) ──
+// Tipos: 'entrada', 'saida', 'diario', 'invest'
+// invest reduz saldo mas aparece separado visualmente
+const SEED_ALL = {
+  0: [ // Janeiro
+    {d:1, t:'diario',  v:169.93, desc:'Gasto diário', cat:'outros', notes:'tampa privada'},
+    {d:2, t:'entrada', v:0.13,   desc:'Rendimento invest.', cat:'rendimento', notes:'invest.'},
+    {d:3, t:'entrada', v:1500,   desc:'Entrada', cat:'outros', notes:'ps4'},
+    {d:3, t:'diario',  v:1700,   desc:'Gasto diário', cat:'outros', notes:'volante do Leo'},
+    {d:4, t:'entrada', v:121.26, desc:'Entrada', cat:'outros', notes:'bar da tula'},
+    {d:4, t:'diario',  v:302.22, desc:'Gasto diário', cat:'outros', notes:'195,8 - bar da tula - paguei pelos 3 no caju\n106,42 - mercado - caju'},
+    {d:5, t:'entrada', v:5029.95,desc:'Salário', cat:'salário', notes:'Salário + 300 de atividade fisica'},
+    {d:5, t:'saida',   v:1683.24,desc:'NUBANK ASSINATURAS', cat:'outros', notes:''},
+    {d:5, t:'diario',  v:312.94, desc:'Gasto diário', cat:'outros', notes:'Tênis'},
+    {d:6, t:'entrada', v:66.71,  desc:'Entrada', cat:'outros', notes:'Reembolso shein 64,23\nInvest - 2,48'},
+    {d:6, t:'diario',  v:400,    desc:'Gasto diário', cat:'outros', notes:'400 - seminal'},
+    {d:7, t:'diario',  v:285.47, desc:'Gasto diário', cat:'outros', notes:'Ourives - 150\n? - 97,67\n37,80 - stella cafe'},
+    {d:8, t:'diario',  v:333.95, desc:'Gasto diário', cat:'outros', notes:'32 - unha\n20 - farmácia adiantamento do remedio manipulado\n32 - luzia\n249,95 - vestido'},
+    {d:9, t:'diario',  v:64.79,  desc:'Gasto diário', cat:'outros', notes:'24,89 - farmacia\n26 - subway\n13,90 - bk sorvete'},
+    {d:10,t:'entrada', v:225.6,  desc:'Entrada', cat:'outros', notes:'75,6 - mãe\n150 - pai'},
+    {d:11,t:'entrada', v:170,    desc:'Entrada', cat:'outros', notes:'bargo e Filipe - comida tailandesa'},
+    {d:11,t:'diario',  v:309.48, desc:'Gasto diário', cat:'outros', notes:'garuda - 256\nsorvete - 53,48'},
+    {d:12,t:'diario',  v:300,    desc:'Gasto diário', cat:'outros', notes:'terapia - 2x'},
+    {d:13,t:'diario',  v:219.99, desc:'Gasto diário', cat:'outros', notes:''},
+    {d:14,t:'entrada', v:185.19, desc:'Entrada', cat:'outros', notes:'45,19 - reembolso enjoei\n140 - mae'},
+    {d:14,t:'diario',  v:71.8,   desc:'Gasto diário', cat:'outros', notes:'MEI'},
+    {d:15,t:'entrada', v:1035,   desc:'Salário parcial', cat:'salário', notes:''},
+    {d:15,t:'diario',  v:70,     desc:'Gasto diário', cat:'outros', notes:'diego - banho da maya (cobrar maezinha)'},
+    {d:16,t:'entrada', v:24.89,  desc:'Farmácia reembolso', cat:'outros', notes:''},
+    {d:17,t:'saida',   v:371.23, desc:'NUBANK ASSINATURAS', cat:'outros', notes:''},
+    {d:17,t:'diario',  v:50,     desc:'Gasto diário', cat:'outros', notes:'doação ccb'},
+    {d:19,t:'entrada', v:1.80,   desc:'Entrada', cat:'outros', notes:''},
+    {d:20,t:'entrada', v:0.03,   desc:'Entrada', cat:'outros', notes:''},
+    {d:20,t:'diario',  v:114.58, desc:'Gasto diário', cat:'outros', notes:'almoço Simone'},
+    {d:21,t:'diario',  v:80,     desc:'Gasto diário', cat:'outros', notes:'manutenção maquina de lavar - mae vai pagar depois'},
+    {d:23,t:'entrada', v:204.05, desc:'Entrada', cat:'outros', notes:'150 - mãe (banho da maya e maquina)\n54,05 - bonecas enjoei'},
+    {d:23,t:'diario',  v:258.67, desc:'Gasto diário', cat:'outros', notes:'200 - maquina\ncinema - 58,67'},
+    {d:25,t:'invest',  v:2000,   desc:'Investimento', cat:'investimento', notes:''},
+    {d:25,t:'diario',  v:141.55, desc:'Gasto diário', cat:'outros', notes:'batom mac'},
+    {d:26,t:'entrada', v:200,    desc:'Entrada', cat:'outros', notes:'maquina pai pagou'},
+    {d:26,t:'diario',  v:150,    desc:'Gasto diário', cat:'outros', notes:'terapia'},
+    {d:27,t:'diario',  v:221.06, desc:'Gasto diário', cat:'outros', notes:'147,83 - presente - Barbara\n73,23 - sushi'},
+    {d:30,t:'diario',  v:330.14, desc:'Gasto diário', cat:'outros', notes:'diferença do que gastei e não anotei'},
+    {d:31,t:'entrada', v:65,     desc:'Entrada', cat:'outros', notes:'mãe pagou sushi e outra coisa'},
+  ],
+  1: [ // Fevereiro
+    {d:2, t:'entrada', v:0.14,   desc:'Rendimento invest.', cat:'rendimento', notes:'invest'},
+    {d:4, t:'diario',  v:87.79,  desc:'Gasto diário', cat:'outros', notes:'55 - banho maya\n32,79 - ifood'},
+    {d:5, t:'entrada', v:5038.03,desc:'Salário', cat:'salário', notes:'Salário + 300 de atividade fisica'},
+    {d:5, t:'saida',   v:2119.29,desc:'NUBANK ASSINATURAS', cat:'outros', notes:''},
+    {d:6, t:'entrada', v:0.02,   desc:'Entrada', cat:'outros', notes:''},
+    {d:6, t:'invest',  v:1350,   desc:'Investimento', cat:'investimento', notes:''},
+    {d:6, t:'diario',  v:221.5,  desc:'Gasto diário', cat:'outros', notes:'71,5 - marlene\n150 - psico'},
+    {d:7, t:'entrada', v:10,     desc:'Cashback', cat:'rendimento', notes:'cashback'},
+    {d:7, t:'invest',  v:10,     desc:'Investimento', cat:'investimento', notes:''},
+    {d:7, t:'diario',  v:14,     desc:'Gasto diário', cat:'outros', notes:'marlene'},
+    {d:8, t:'diario',  v:400,    desc:'Gasto diário', cat:'outros', notes:'seminal'},
+    {d:9, t:'diario',  v:35,     desc:'Gasto diário', cat:'outros', notes:'petisco'},
+    {d:10,t:'entrada', v:120,    desc:'Entrada', cat:'outros', notes:'64,35 - lona piscina 6/6\n34,78 - carro 2/5\n36 - yt pai e mãe'},
+    {d:10,t:'diario',  v:84,     desc:'Gasto diário', cat:'outros', notes:'84 - sapatos 2/5'},
+    {d:15,t:'entrada', v:1035,   desc:'Salário parcial', cat:'salário', notes:''},
+    {d:15,t:'invest',  v:1000,   desc:'Investimento', cat:'investimento', notes:''},
+    {d:16,t:'entrada', v:83,     desc:'Entrada', cat:'outros', notes:'28 - lanche\n55 - banho maya'},
+    {d:17,t:'entrada', v:60,     desc:'Wellhub barb', cat:'outros', notes:'wellhub - barb'},
+    {d:17,t:'diario',  v:40,     desc:'Gasto diário', cat:'outros', notes:'kodak mafia'},
+    {d:18,t:'entrada', v:50,     desc:'Freela - adesivo', cat:'freelance', notes:'freela - adesivo'},
+    {d:18,t:'diario',  v:110,    desc:'Gasto diário', cat:'outros', notes:'25 - yas\n85 - Rebeca da silva castro almeida'},
+    {d:21,t:'diario',  v:49.19,  desc:'Gasto diário', cat:'outros', notes:'barbeador - pai'},
+    {d:22,t:'entrada', v:50,     desc:'Entrada', cat:'outros', notes:'invest'},
+    {d:22,t:'diario',  v:48.23,  desc:'Gasto diário', cat:'outros', notes:'passagem vó'},
+    {d:23,t:'diario',  v:48.23,  desc:'Gasto diário', cat:'outros', notes:'passagem sp'},
+    {d:24,t:'diario',  v:90.24,  desc:'Gasto diário', cat:'outros', notes:'38 - cinema\n52,24 - passagem sp'},
+    {d:25,t:'diario',  v:52.24,  desc:'Gasto diário', cat:'outros', notes:'passagem vó'},
+    {d:27,t:'diario',  v:20,     desc:'Gasto diário', cat:'outros', notes:'indrive'},
+    {d:28,t:'diario',  v:29.9,   desc:'Gasto diário', cat:'outros', notes:'BK'},
+    {d:29,t:'diario',  v:90,     desc:'Gasto diário', cat:'outros', notes:'das'},
+  ],
+  2: [ // Março
+    {d:1, t:'entrada', v:66,     desc:'Entrada', cat:'outros', notes:'Vó pagou passagem e parte do Uber'},
+    {d:1, t:'diario',  v:45.8,   desc:'Gasto diário', cat:'outros', notes:'40,40 Uber\n5,40 metrô'},
+    {d:2, t:'entrada', v:0.14,   desc:'Rendimento invest.', cat:'rendimento', notes:'Invest'},
+    {d:3, t:'diario',  v:300,    desc:'Gasto diário', cat:'outros', notes:'300,00 - terapia'},
+    {d:4, t:'entrada', v:4.2,    desc:'Rendimento invest.', cat:'rendimento', notes:'invest'},
+    {d:5, t:'entrada', v:5188.03,desc:'Salário', cat:'salário', notes:'Salário + 300 de atividade fisica\n150 - teclado'},
+    {d:5, t:'saida',   v:1350,   desc:'NUBANK ASSINATURAS', cat:'outros', notes:''},
+    {d:5, t:'invest',  v:1350,   desc:'Investimento', cat:'investimento', notes:''},
+    {d:5, t:'diario',  v:400,    desc:'Gasto diário', cat:'outros', notes:'seminal'},
+    {d:6, t:'entrada', v:72.83,  desc:'Entrada', cat:'outros', notes:'2,83 - invest\n70 - wellhub barb'},
+    {d:6, t:'saida',   v:2788.51,desc:'NUBANK ASSINATURAS', cat:'outros', notes:''},
+    {d:7, t:'diario',  v:5,      desc:'Gasto diário', cat:'outros', notes:'agua pra mãe'},
+    {d:8, t:'entrada', v:391,    desc:'Entrada', cat:'outros', notes:'pai pagou oq estava devendo'},
+    {d:8, t:'diario',  v:53,     desc:'Gasto diário', cat:'outros', notes:'sapato e roupa que comprei com a mãe'},
+    {d:9, t:'entrada', v:12.99,  desc:'Rendimento invest.', cat:'rendimento', notes:'invest'},
+    {d:10,t:'entrada', v:436.23, desc:'Entrada', cat:'outros', notes:'enjoei'},
+    {d:10,t:'diario',  v:233,    desc:'Gasto diário', cat:'outros', notes:'kerastase'},
+    {d:11,t:'diario',  v:6.7,    desc:'Gasto diário', cat:'outros', notes:'99'},
+    {d:12,t:'diario',  v:476.16, desc:'Gasto diário', cat:'outros', notes:'cartao do leo'},
+    {d:13,t:'diario',  v:117.41, desc:'Gasto diário', cat:'outros', notes:'91,55 - frete do nintendo\n25,86 - restaurante'},
+    {d:14,t:'diario',  v:122.61, desc:'Gasto diário', cat:'outros', notes:'50,56 - almoço\nmercado'},
+    {d:15,t:'entrada', v:1035,   desc:'Salário parcial', cat:'salário', notes:''},
+    {d:15,t:'invest',  v:1000,   desc:'Investimento', cat:'investimento', notes:''},
+    {d:16,t:'saida',   v:200,    desc:'Saída', cat:'outros', notes:''},
+    {d:17,t:'saida',   v:1058.43,desc:'NUBANK ASSINATURAS', cat:'outros', notes:''},
+    {d:18,t:'entrada', v:477,    desc:'Entrada', cat:'outros', notes:'cartao do leo'},
+    {d:18,t:'diario',  v:10.6,   desc:'Gasto diário', cat:'outros', notes:'comida'},
+    {d:19,t:'entrada', v:8.58,   desc:'Reembolso', cat:'outros', notes:'reembolso'},
+    {d:19,t:'diario',  v:50,     desc:'Gasto diário', cat:'outros', notes:'capinha switch'},
+    {d:20,t:'entrada', v:0.02,   desc:'Rendimento invest.', cat:'rendimento', notes:'invest'},
+    {d:20,t:'diario',  v:15,     desc:'Gasto diário', cat:'outros', notes:'frete capinha switch'},
+    {d:21,t:'diario',  v:85,     desc:'Gasto diário', cat:'outros', notes:'banho maya'},
+    {d:22,t:'diario',  v:81.76,  desc:'Gasto diário', cat:'outros', notes:'restaurante'},
+    {d:23,t:'diario',  v:63.37,  desc:'Gasto diário', cat:'outros', notes:'25,07 - almoço\n10,80 - transporte\n27,50 - lanchonete'},
+    {d:25,t:'diario',  v:24.9,   desc:'Gasto diário', cat:'outros', notes:'mcdonalds'},
+    {d:26,t:'diario',  v:59.29,  desc:'Gasto diário', cat:'outros', notes:'dumas'},
+    {d:27,t:'diario',  v:5.97,   desc:'Gasto diário', cat:'outros', notes:'impressão'},
+    {d:28,t:'entrada', v:154,    desc:'Entrada', cat:'outros', notes:'mãe pagou batom'},
+    {d:28,t:'diario',  v:300,    desc:'Gasto diário', cat:'outros', notes:'fatura'},
+    {d:29,t:'diario',  v:20,     desc:'Gasto diário', cat:'outros', notes:'liberdade - doce coreano'},
+    {d:30,t:'diario',  v:200,    desc:'Gasto diário', cat:'outros', notes:'carteira'},
+    {d:31,t:'entrada', v:288.06, desc:'Entrada', cat:'outros', notes:'280 reembolso - tractian\n8,06 - superfrete'},
+    {d:31,t:'diario',  v:90,     desc:'Gasto diário', cat:'outros', notes:'das'},
+  ],
+  3: [ // Abril
+    {d:2, t:'entrada', v:0.14,   desc:'Rendimento invest.', cat:'rendimento', notes:'invest'},
+    {d:3, t:'entrada', v:567,    desc:'Entrada', cat:'outros', notes:'18 - youtube\n247,30 - roma\n85 - banho Maya\n150 - kerastase'},
+    {d:3, t:'diario',  v:369.9,  desc:'Gasto diário', cat:'outros', notes:'kerastase'},
+    {d:5, t:'entrada', v:4738.03,desc:'Salário', cat:'salário', notes:'Salário + 300 de atividade fisica'},
+    {d:5, t:'invest',  v:500,    desc:'Investimento', cat:'investimento', notes:''},
+    {d:5, t:'diario',  v:400,    desc:'Gasto diário', cat:'outros', notes:'seminal'},
+    {d:6, t:'entrada', v:225.72, desc:'Reembolso tractian', cat:'outros', notes:'reembolso - tractian'},
+    {d:6, t:'diario',  v:20,     desc:'Gasto diário', cat:'outros', notes:'pix praia - segunda'},
+    {d:7, t:'entrada', v:70,     desc:'Wellhub barb', cat:'outros', notes:'wellhub - barb'},
+    {d:9, t:'diario',  v:250.91, desc:'Gasto diário', cat:'outros', notes:'30,91 - cafe\n220 - ceramica'},
+    {d:10,t:'diario',  v:35,     desc:'Gasto diário', cat:'outros', notes:'cookie'},
+    {d:11,t:'diario',  v:203,    desc:'Gasto diário', cat:'outros', notes:'179 - presente pai\n24 - compras cidade'},
+    {d:12,t:'entrada', v:32,     desc:'Entrada', cat:'outros', notes:'pai - uber do vo'},
+    {d:14,t:'entrada', v:100,    desc:'Entrada', cat:'outros', notes:'tia ester passagem'},
+    {d:14,t:'saida',   v:50,     desc:'Saída', cat:'outros', notes:'cartao do leo'},
+    {d:14,t:'diario',  v:50,     desc:'Gasto diário', cat:'outros', notes:'banho maya'},
+    {d:15,t:'entrada', v:1035,   desc:'Salário parcial', cat:'salário', notes:''},
+    {d:15,t:'invest',  v:500,    desc:'Investimento', cat:'investimento', notes:''},
+    {d:15,t:'diario',  v:185.46, desc:'Gasto diário', cat:'outros', notes:'150 - terapia\n9,10 - volei\n26,36 - farmacia'},
+    {d:16,t:'entrada', v:50,     desc:'Entrada', cat:'outros', notes:'banho maya'},
+    {d:17,t:'saida',   v:4093.51,desc:'NUBANK ASSINATURAS', cat:'outros', notes:''},
+    {d:30,t:'entrada', v:350,    desc:'Entrada', cat:'outros', notes:'SALÁRIO VARIÁVEL'},
+  ],
+};
+
+function buildSeed(){
+  const r={};
+  for(let m=0;m<12;m++){
+    const entries=(SEED_ALL[m]||[]).map(e=>({...e}));
+    entries.sort((a,b)=>a.d-b.d||(a.t==='diario'?-1:1));
+    r[m]={entries};
+  }
+  return r;
+}
+
+let appData={},defaultDaily=71.5;
+try{
+  const raw=JSON.parse(localStorage.getItem('fin2026')||'{}');
+  if(raw.entries&&Object.keys(raw.entries).length>0){appData=raw.entries;defaultDaily=raw.defaultDaily??71.5;}
+  else{appData=buildSeed();saveData();}
+}catch(e){appData=buildSeed();}
+for(let m=0;m<12;m++)if(!appData[m])appData[m]={entries:[]};
+
+function saveData(){try{localStorage.setItem('fin2026',JSON.stringify({entries:appData,defaultDaily}));}catch(e){}}
+function getDays(m){return new Date(2026,m+1,0).getDate();}
+function fmt(v,dec=2){return 'R$\u202f'+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
+
+function getDailyAmt(m,d){
+  const de=(appData[m]?.entries||[]).filter(e=>e.d===d&&e.t==='diario');
+  return de.length>0?de.reduce((s,e)=>s+e.v,0):defaultDaily;
+}
+
+// Saldo acumulado até o fim do mês m (exclusive = saldo antes do mês m)
+function getSaldoBeforeMonth(m){
+  let s=SALDO_INICIAL;
+  for(let mi=0;mi<m;mi++){
+    const entries=appData[mi]?.entries||[];
+    for(let d=1;d<=getDays(mi);d++){
+      s+=0; // daily handled below
+    }
+    // actually compute day by day
+    for(let d=1;d<=getDays(mi);d++){
+      s-=getDailyAmt(mi,d);
+      entries.filter(e=>e.d===d).forEach(e=>{
+        if(e.t==='entrada')s+=e.v;
+        else if(e.t==='saida'||e.t==='invest')s-=e.v;
+      });
+    }
+  }
+  return s;
+}
+
+function calcStats(m){
+  const entries=appData[m]?.entries||[];
+  let totalIn=0,totalOut=0,totalInvest=0,totalDiario=0;
+  entries.forEach(e=>{
+    if(e.t==='entrada')totalIn+=e.v;
+    else if(e.t==='saida')totalOut+=e.v;
+    else if(e.t==='invest'){totalInvest+=e.v;totalOut+=e.v;}
+  });
+  for(let d=1;d<=getDays(m);d++)totalDiario+=getDailyAmt(m,d);
+  totalOut+=totalDiario;
+  return{totalIn,totalOut,totalInvest,totalDiario,saldo:totalIn-totalOut};
+}
+
+let currentMonth=new Date().getMonth(),monthChart=null,ecoChart=null,modalTipo='entrada',editingEntry=null;
+
+function switchView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='mensal')renderMensal();
+  if(name==='economia')renderEconomia();
+}
+function changeMonth(dir){currentMonth=Math.max(0,Math.min(11,currentMonth+dir));renderDiario();}
+
+function renderDiario(){
+  document.getElementById('month-title').textContent=MONTHS[currentMonth]+' 2026';
+  document.getElementById('default-label').textContent=fmt(defaultDaily);
+  const s=calcStats(currentMonth);
+  let saldoInicio=getSaldoBeforeMonth(currentMonth);
+
+  document.getElementById('diario-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Saldo inicial</div><div class="metric-value">${fmt(saldoInicio,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Entradas</div><div class="metric-value green">${fmt(s.totalIn,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Saídas</div><div class="metric-value red">${fmt(s.totalOut-s.totalInvest,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Investido</div><div class="metric-value blue">${fmt(s.totalInvest,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Saldo final</div><div class="metric-value ${(saldoInicio+s.saldo)>=0?'green':'red'}">${fmt(saldoInicio+s.saldo,0)}</div></div>
+  `;
+
+  const today=new Date();
+  const isThisMonth=today.getMonth()===currentMonth&&today.getFullYear()===2026;
+  const todayDay=isThisMonth?today.getDate():-1;
+
+  const byDay={};
+  (appData[currentMonth]?.entries||[]).forEach((e,i)=>{if(!byDay[e.d])byDay[e.d]=[];byDay[e.d].push({...e,_i:i});});
+
+  let runSaldo=saldoInicio,html='';
+  for(let d=1;d<=getDays(currentMonth);d++){
+    const all=byDay[d]||[];
+    const dailyEntries=all.filter(e=>e.t==='diario');
+    const otherEntries=all.filter(e=>e.t!=='diario');
+    const dailyAmt=getDailyAmt(currentMonth,d);
+    let dIn=0,dOut=dailyAmt;
+    otherEntries.forEach(e=>{if(e.t==='entrada')dIn+=e.v;else if(e.t==='saida'||e.t==='invest')dOut+=e.v;});
+    runSaldo+=dIn-dOut;
+
+    const isToday=d===todayDay;
+    const hasOverride=dailyEntries.length>0;
+    const diff=dailyAmt-defaultDaily;
+    const rowClass=isToday?'today-row':(diff>0.01?'over-row':(diff<-0.01?'under-row':''));
+
+    let diffBadge='';
+    if(hasOverride){
+      if(Math.abs(diff)>0.01)diffBadge=`<span class="diff-badge ${diff>0?'diff-over':'diff-under'}">(${diff>0?'+':''}${fmt(diff)})</span>`;
+      else diffBadge=`<span class="diff-badge diff-ok">(= padrão)</span>`;
+    }
+    const dailyNote=hasOverride&&dailyEntries[0].notes?dailyEntries[0].notes:'';
+    const dailyNoteHtml=dailyNote?`<div class="notes-lines">${dailyNote.split('\n').map(l=>`<span class="note-line">↳ ${l.trim()}</span>`).join('')}</div>`:'';
+    const dailyDesc=hasOverride?dailyEntries.map(e=>e.desc||'Gasto diário').join(', '):'Gasto diário (padrão)';
+    const dailyActions=hasOverride
+      ?dailyEntries.map(e=>`<button class="edit-btn" onclick="openEditModal(${currentMonth},${e._i})" title="Editar">✎</button><button class="del-btn" onclick="removeEntry(${currentMonth},${e._i})">×</button>`).join('')
+      :`<button class="edit-btn" onclick="prefillDailyEdit(${d})" title="Editar valor deste dia">✎</button>`;
+
+    const saldoColor=runSaldo>=0?'var(--green)':'var(--red)';
+    html+=`<tr class="${rowClass}">
+      <td class="day-num">${String(d).padStart(2,'0')}</td>
+      <td><span class="tag tag-diario">diário</span><strong style="font-weight:500">${dailyDesc}</strong>${diffBadge}${dailyNoteHtml}</td>
+      <td style="text-align:right"><span class="val-empty">—</span></td>
+      <td style="text-align:right"><span class="val-daily">−${fmt(dailyAmt)}</span></td>
+      <td style="text-align:right"><span class="val-saldo" style="color:${saldoColor}">${fmt(runSaldo)}</span></td>
+      <td><div class="actions-cell">${dailyActions}</div></td>
+    </tr>`;
+
+    otherEntries.forEach(e=>{
+      const isInvest=e.t==='invest';
+      const isEntrada=e.t==='entrada';
+      const isSaida=e.t==='saida';
+      const inV=isEntrada?`<span class="val-in">+${fmt(e.v)}</span>`:`<span class="val-empty">—</span>`;
+      const outV=isSaida?`<span class="val-out">−${fmt(e.v)}</span>`:isInvest?`<span class="val-invest">−${fmt(e.v)}</span>`:`<span class="val-empty">—</span>`;
+      const tagClass=isEntrada?'tag-entrada':isInvest?'tag-invest':'tag-saida';
+      const tagLabel=isEntrada?'entrada':isInvest?'invest':'saída';
+      const noteHtml=e.notes?`<div class="notes-lines">${e.notes.split('\n').map(l=>`<span class="note-line">↳ ${l.trim()}</span>`).join('')}</div>`:'';
+      html+=`<tr class="sub-row">
+        <td></td>
+        <td><span class="tag ${tagClass}">${tagLabel}</span>${e.desc||''}${noteHtml}</td>
+        <td style="text-align:right">${inV}</td>
+        <td style="text-align:right">${outV}</td>
+        <td></td>
+        <td><div class="actions-cell">
+          <button class="edit-btn" onclick="openEditModal(${currentMonth},${e._i})" title="Editar">✎</button>
+          <button class="del-btn" onclick="removeEntry(${currentMonth},${e._i})">×</button>
+        </div></td>
+      </tr>`;
+    });
+  }
+  document.getElementById('day-tbody').innerHTML=html;
+}
+
+function prefillDailyEdit(d){openModal('diario',d);document.getElementById('m-valor').value=defaultDaily;document.getElementById('m-desc').value='Gasto diário';}
+function removeEntry(m,idx){appData[m].entries.splice(idx,1);saveData();renderDiario();}
+
+function openModal(tipo,dia){
+  editingEntry=null;
+  document.getElementById('modal-title-text').textContent='Novo lançamento';
+  document.getElementById('m-dia').value=dia||new Date().getDate();
+  document.getElementById('m-valor').value='';
+  document.getElementById('m-desc').value='';
+  document.getElementById('m-notes').value='';
+  document.getElementById('m-hint').textContent='';
+  selectTipo(tipo||'entrada');
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-valor').focus(),100);
+}
+function openEditModal(m,idx){
+  const e=appData[m].entries[idx];if(!e)return;
+  editingEntry={m,idx};
+  document.getElementById('modal-title-text').textContent='Editar lançamento';
+  document.getElementById('m-dia').value=e.d;
+  document.getElementById('m-valor').value=e.v;
+  document.getElementById('m-desc').value=e.desc||'';
+  document.getElementById('m-notes').value=e.notes||'';
+  document.getElementById('m-cat').value=e.cat||'outros';
+  document.getElementById('m-hint').textContent='';
+  selectTipo(e.t);
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-valor').focus(),100);
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');editingEntry=null;}
+function selectTipo(t){
+  modalTipo=t;
+  ['entrada','saida','diario','invest'].forEach(x=>{document.getElementById('opt-'+x).className='tipo-opt'+(x===t?' sel-'+x:'');});
+  document.getElementById('m-hint').textContent=t==='diario'?`Padrão atual: ${fmt(defaultDaily)}`:'';
+}
+function saveEntry(){
+  const v=parseFloat(document.getElementById('m-valor').value);
+  const desc=document.getElementById('m-desc').value.trim()||modalTipo;
+  const notes=document.getElementById('m-notes').value.trim();
+  const d=parseInt(document.getElementById('m-dia').value);
+  const cat=document.getElementById('m-cat').value;
+  if(!v||isNaN(v)||!d||d<1||d>31){document.getElementById('m-valor').focus();return;}
+  if(editingEntry){appData[editingEntry.m].entries[editingEntry.idx]={d,t:modalTipo,v,desc,cat,notes};}
+  else{if(!appData[currentMonth])appData[currentMonth]={entries:[]};appData[currentMonth].entries.push({d,t:modalTipo,v,desc,cat,notes});}
+  appData[currentMonth].entries.sort((a,b)=>a.d-b.d||(a.t==='diario'?-1:1));
+  saveData();closeModal();renderDiario();
+}
+
+function openDefaultModal(){document.getElementById('default-current-val').textContent=fmt(defaultDaily);document.getElementById('default-input').value=defaultDaily;document.getElementById('default-modal-overlay').classList.add('open');setTimeout(()=>document.getElementById('default-input').select(),100);}
+function closeDefaultModal(){document.getElementById('default-modal-overlay').classList.remove('open');}
+function saveDefault(){const v=parseFloat(document.getElementById('default-input').value);if(!v||isNaN(v)||v<0)return;defaultDaily=v;saveData();closeDefaultModal();renderDiario();}
+
+function renderMensal(){
+  const ins=[],outs=[],invs=[];
+  for(let m=0;m<12;m++){const s=calcStats(m);ins.push(Math.round(s.totalIn));outs.push(Math.round(s.totalOut-s.totalInvest));invs.push(Math.round(s.totalInvest));}
+  if(monthChart)monthChart.destroy();
+  monthChart=new Chart(document.getElementById('monthly-chart'),{
+    type:'bar',data:{labels:MONTHS_SHORT,datasets:[
+      {label:'Entradas',data:ins,backgroundColor:'rgba(26,158,111,0.65)',borderRadius:4,borderSkipped:false},
+      {label:'Saídas',data:outs,backgroundColor:'rgba(216,79,44,0.55)',borderRadius:4,borderSkipped:false},
+      {label:'Investimentos',data:invs,backgroundColor:'rgba(37,99,168,0.55)',borderRadius:4,borderSkipped:false},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      x:{grid:{display:false},ticks:{font:{size:11},color:'#888880'}},
+      y:{grid:{color:'rgba(128,128,128,0.08)'},ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR'),font:{size:10},color:'#888880'}}
+    }}
+  });
+  let runSaldo=SALDO_INICIAL,grid='';
+  for(let m=0;m<12;m++){
+    const s=calcStats(m);
+    runSaldo+=s.saldo;
+    grid+=`<div class="month-card"><div class="month-card-name">${MONTHS[m]}</div>
+      <div class="month-card-row"><span class="lbl">Entradas</span><span class="pos">${fmt(s.totalIn,0)}</span></div>
+      <div class="month-card-row"><span class="lbl">Saídas</span><span class="neg">${fmt(s.totalOut-s.totalInvest,0)}</span></div>
+      <div class="month-card-row"><span class="lbl">Investido</span><span class="blu">${fmt(s.totalInvest,0)}</span></div>
+      <div class="month-card-row" style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border)"><span class="lbl">Saldo</span><span class="${runSaldo>=0?'pos':'neg'}">${fmt(runSaldo,0)}</span></div>
+    </div>`;
+  }
+  document.getElementById('yearly-grid').innerHTML=grid;
+}
+
+function renderEconomia(){
+  const pct=Math.min(100,Math.round((TENHO/META)*100));
+  document.getElementById('eco-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Meta</div><div class="metric-value">${fmt(META,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Acumulado</div><div class="metric-value green">${fmt(TENHO,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">Faltam</div><div class="metric-value red">${fmt(META-TENHO,0)}</div></div>
+    <div class="metric-card"><div class="metric-label">% da meta</div><div class="metric-value green">${pct}%</div></div>
+  `;
+  document.getElementById('eco-acumulado').textContent=fmt(TENHO,0);
+  document.getElementById('eco-pct').textContent=pct+'%';
+  document.getElementById('eco-bar').style.width=pct+'%';
+  document.getElementById('eco-faltam').textContent='Faltam '+fmt(META-TENHO,0);
+  document.getElementById('eco-meta').textContent='Meta: '+fmt(META,0);
+  if(ecoChart)ecoChart.destroy();
+  ecoChart=new Chart(document.getElementById('eco-chart'),{
+    type:'line',data:{labels:ECO_MONTHS.map(i=>MONTHS_SHORT[i]),datasets:[{label:'Economia',data:ECO_VALUES,borderColor:'#1a9e6f',backgroundColor:'rgba(26,158,111,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#1a9e6f',fill:true,tension:0.35}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:'#888880'}},y:{grid:{color:'rgba(128,128,128,0.08)'},ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR'),font:{size:10},color:'#888880'}}}}
+  });
+}
+
+[document.getElementById('modal-overlay'),document.getElementById('default-modal-overlay')].forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el){closeModal();closeDefaultModal();}});
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDefaultModal();}});
+
+if(sessionStorage.getItem('auth')==='1')renderDiario();
+</script>
+</body>
+</html>
